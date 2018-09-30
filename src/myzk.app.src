@@ -1,0 +1,16 @@
+{application, myzk,
+ [{description, "An OTP application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { myzk_app, []}},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[{store_dir, <<"see config in sys.config">>}]},
+  {modules, [zk_server]},
+
+  {maintainers, []},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
