@@ -6,8 +6,9 @@
 %%% @end
 %%% Created : 2018-09-30 12:54:40.492956
 %%%-------------------------------------------------------------------
--module(zk_server).
+-include("common.hrl").
 
+-module(zk_server).
 -behaviour(gen_server).
 
 %% API
@@ -21,9 +22,21 @@
          terminate/2,
          code_change/3]).
 
+
+
+%% test fns
+-export([cmd_ls/1, cmd_get/1, cmd/2]).
+
+cmd_ls(NodePath) -> cmd(?CMD_LS, NodePath).
+cmd_get(NodePath) -> cmd(?CMD_GET, NodePath).
+
+cmd(Cmd, Param) -> gen_server:cast(?MODULE, {cmd, Cmd, Param}).
+
+
 -define(SERVER, ?MODULE).
 
 -record(state, {}).
+
 
 %%%===================================================================
 %%% API
@@ -89,9 +102,12 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 %%
 handle_cast({cmd, Cmd, Param}, State) ->
+    handle_cmd(Cmd, Param),
+    {noreply, State};
+
 
 handle_cast(_Msg, State) ->
-
+    logger:warnning("unknown msg ~p", [_Msg]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -137,5 +153,13 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 
-
-
+handle_cmd(Cmd, Param) ->
+    case Cmd of
+        ?CMD_LS ->
+            logger:debug("cmd ls ~p", [Param]),
+            true;
+        _ -> 
+            logger:warning("unknown cmd ~p", [Cmd]),
+            true
+    end,
+    ok.

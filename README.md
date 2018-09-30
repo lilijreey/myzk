@@ -11,7 +11,6 @@ Feathers
 * master, slave mode,
 * read, write independent.
 
-
 Interface
 =========
 
@@ -21,21 +20,10 @@ Interface
 4. delete node
 5. clusters info 
 
-Road.map
+Roadmap
 ===============
 1. single node
 2. clusters
-
-
-Module
-=============
-* data store 
-
-* cmd
-
-* data record
-
-
 
 Build
 -----
