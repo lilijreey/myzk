@@ -37,7 +37,6 @@ $peer_player = nil
 $my_robots={}
 $peer_robots={}
 $map = {}
-$my_robots_move_order = []
 
 T_AI = :AiBrain
 T_GJ = :OverLordSoldier
@@ -109,7 +108,7 @@ def get_move_intention(playerId, pos)
 end
 
 class Agent
-  attr_accessor :id, :type, :pos, :hp, :event_box, :sync_seq, :move_intention
+  attr_accessor :id, :type, :pos, :hp, :event_box, :sync_seq, :move_intention, :is_moved
   def initialize(id, type, pos, hp=nil, attack=nil, defence=nil)
     @id = id
     @type = (type.is_a? String) ? type.to_sym : type
@@ -142,6 +141,9 @@ class Agent
     @move_intention = get_move_intention(playerId, @pos)
     #$log.debug("p[#{playerId}], robot:#{@id} update int #{@move_intention}")
 
+  end
+
+  def action
   end
 
 end
@@ -232,6 +234,8 @@ def fight_order_req(req)
   para['peerrobotlist'].each do |e|
     robot = $peer_robots[e['roleid']]
     if robot # update
+
+      robot.is_moved = e['havefight'] == 1
       robot.pos.x = e['columnid']
       robot.pos.y = e['rowid']
       robot.hp = e['hp']
@@ -258,14 +262,10 @@ def fight_order_req(req)
 end
 
 
+
 def fight_action(is_new_round)
   if is_new_round
 
-    ## 根据可移动方向确认移动顺序
-    $my_robots_move_order = 
-      $my_robots.values.map(&:get_moveable_count).zip($my_robots.keys).sort do |(lc, _), (rc, _)|
-        rc <=> lc
-      end
 
     #$log.debug("action order #{$my_robots_move_order}")
 
@@ -277,14 +277,27 @@ def fight_action(is_new_round)
     #
     peer_move_intertion = {}
   end
-  # TODO get ans
 
-  robot_id = $my_robots_move_order.pop
-  $my_robots[robot_id].ai()
+  ## 根据可移动方向确认移动顺序,TODO 根据是否能攻击敌人加入排序
+  ack_robot = 
+    $my_robots.values
+    .select(&:is_moved)
+    .map {|e| [e.id, e.get_moveable_count] }
+    .max {|(_, lc), (_, rc)| lc <=> rc }
 
-  ans = {'attack' => '',
-         'roleid' => -1,
-  }
+  ans = 
+  if ack_robot.empty?
+    {'attack' => '',
+     'roleid' => -1,
+    }
+  else # TODO
+    {'attack' => '',
+     'roleid' => -1,
+    }
+
+    $log.debug("next move robot #{ack_robot}")
+    $my_robots[ack_robot[0]].action()
+  end
 
 
   output_rsp('queryFightOrderRsp', ans)
